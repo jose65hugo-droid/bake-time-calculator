@@ -1,58 +1,275 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#071a2d">
-  <title>Bake Time Calculator</title>
-  <style>
-    :root{color-scheme:dark;--bg:#061422;--card:#0d2438;--card2:#12314a;--text:#f4f8fb;--muted:#a9bfd0;--accent:#58d5c9;--accent2:#21aa9e;--line:#25465f;--danger:#ffbd73}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 50% -10%,#164566 0,var(--bg) 42%);color:var(--text)}
-    main{width:min(100%,560px);margin:auto;padding:max(22px,env(safe-area-inset-top)) 16px max(32px,env(safe-area-inset-bottom))}
-    header{text-align:center;margin:8px 0 22px}.icon{font-size:42px;line-height:1}h1{font-size:clamp(27px,7vw,38px);margin:8px 0 6px;letter-spacing:-.04em}header p{margin:0;color:var(--muted)}
-    .card{background:linear-gradient(145deg,rgba(18,49,74,.98),rgba(10,32,50,.98));border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 18px 45px rgba(0,0,0,.28)}
-    label,.label{display:block;font-size:13px;font-weight:750;color:#c2d3df;letter-spacing:.04em;text-transform:uppercase;margin:0 0 8px}.field{margin-bottom:18px}
-    input,select,button{font:inherit}input,select{width:100%;height:52px;border-radius:14px;border:1px solid var(--line);background:#081b2b;color:var(--text);padding:0 13px;font-size:18px;outline:none}input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,213,201,.16)}
-    .time-grid{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:9px}.duration-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .quick{display:flex;gap:8px;overflow:auto;padding-bottom:2px;margin-top:9px}.quick button{flex:0 0 auto;border:1px solid var(--line);background:#102c43;color:#d8e6ee;padding:9px 13px;border-radius:999px;font-weight:700}
-    .calculate{width:100%;border:0;border-radius:16px;min-height:56px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#03201e;font-size:19px;font-weight:850;box-shadow:0 9px 22px rgba(33,170,158,.24)}.calculate:active{transform:translateY(1px)}
-    .result{display:none;margin-top:18px;border:1px solid rgba(88,213,201,.5);background:rgba(7,31,42,.72);border-radius:20px;padding:20px;text-align:center}.result.show{display:block}.result .small{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}.result .day{font-size:21px;font-weight:800;margin-top:7px}.result .ready{font-size:clamp(37px,11vw,54px);line-height:1.08;color:var(--accent);font-weight:900;letter-spacing:-.04em;margin:4px 0 8px}.result .details{color:#c6d6e1}.warning{color:var(--danger);font-size:14px;margin-top:10px;display:none}
-    footer{text-align:center;color:#7f9aad;font-size:12px;margin-top:18px}
-    @media (max-width:360px){.card{padding:16px}.time-grid{gap:6px}input,select{padding:0 9px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a84ff">
+<title>Bake Time Calculator</title>
+<style>
+  :root{
+    --bg:#f2f2f7; --card:#ffffff; --text:#111111; --muted:#6e6e73;
+    --blue:#0a84ff; --blue2:#5ac8fa; --border:#d1d1d6; --green:#34c759;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+    background:var(--bg); color:var(--text);
+  }
+  .wrap{max-width:680px;margin:0 auto;padding:18px 16px 40px}
+  h1{font-size:30px;margin:8px 0 18px}
+  .sub{color:var(--muted);margin-top:-10px;margin-bottom:18px}
+  .card{
+    background:var(--card); border-radius:22px; padding:18px; margin:14px 0;
+    box-shadow:0 1px 0 rgba(0,0,0,.03);
+  }
+  .label{font-weight:700;font-size:15px;margin:8px 0 7px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  input, select, button{
+    width:100%; border-radius:14px; border:1px solid var(--border); background:#fff;
+    padding:14px 12px; font-size:18px; color:var(--text);
+  }
+  button{font-weight:700;cursor:pointer}
+  .primary{background:var(--blue);color:#fff;border-color:var(--blue);font-size:19px}
+  .secondary{background:#eef6ff;color:var(--blue);border-color:#d7eaff}
+  .preset{padding:11px;font-size:15px}
+  .result{
+    text-align:center; background:linear-gradient(180deg,#ffffff,#f8fbff);
+  }
+  .ready{color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+  .time{font-size:52px;line-height:1.05;font-weight:800;margin:8px 0}
+  .date{font-size:25px;font-weight:750}
+  .meta{color:var(--muted);margin-top:6px}
+  .temp{font-weight:700;color:var(--green);margin-top:10px}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  .history-item{padding:12px 0;border-top:1px solid #eee}
+  .history-item:first-child{border-top:0}
+  .small{font-size:14px;color:var(--muted)}
+  .pill{
+    display:inline-block;background:#eef6ff;color:var(--blue);padding:7px 10px;border-radius:999px;
+    font-weight:700;font-size:13px;margin-right:6px;margin-bottom:6px
+  }
+  @media (max-width:520px){
+    .grid2,.grid3{grid-template-columns:1fr}
+    .time{font-size:46px}
+  }
+  .elapsed-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .elapsed-controls select{min-width:0}
+</style>
 </head>
 <body>
-<main>
-  <header><div class="icon">♨️</div><h1>Bake Time Calculator</h1><p>Know exactly when your bake will be ready.</p></header>
-  <section class="card">
-    <div class="field"><label for="startDate">Start date</label><input id="startDate" type="date"></div>
-    <div class="field"><span class="label">Start time</span><div class="time-grid"><select id="startHour" aria-label="Hour"></select><select id="startMinute" aria-label="Minute"></select><select id="meridiem" aria-label="AM or PM"><option>AM</option><option>PM</option></select></div></div>
-    <div class="field"><span class="label">Bake duration</span><div class="duration-grid"><div><input id="durationHours" type="number" min="0" max="999" step="1" value="16" inputmode="numeric" aria-label="Duration hours"></div><div><input id="durationMinutes" type="number" min="0" max="59" step="1" value="0" inputmode="numeric" aria-label="Duration minutes"></div></div><div class="quick" aria-label="Common durations"><button type="button" data-hours="8">8 hours</button><button type="button" data-hours="12">12 hours</button><button type="button" data-hours="16">16 hours</button><button type="button" data-hours="24">24 hours</button></div></div>
-    <div class="field"><label for="temperature">Temperature (optional)</label><input id="temperature" type="number" inputmode="decimal" placeholder="Example: 85"><div class="quick"><button type="button" data-temp-unit="°C">°C</button><button type="button" data-temp-unit="°F">°F</button></div></div>
-    <button class="calculate" id="calculate" type="button">Calculate ready time</button>
-    <div class="warning" id="warning" role="alert"></div>
-    <div class="result" id="result" aria-live="polite"><div class="small">Bake will be ready</div><div class="day" id="readyDay"></div><div class="ready" id="readyTime"></div><div class="details" id="readyDetails"></div></div>
+<div class="wrap">
+  <h1>Bake Time Calculator</h1>
+  <div class="sub">Enter when the bake starts and how long it runs. The finish time is shown in AM/PM.</div>
+
+  <div class="card">
+    <div class="label">Start date</div>
+    <input id="startDate" type="date">
+
+    <div class="label">Start time</div>
+    <div class="grid3">
+      <select id="hour"></select>
+      <select id="minute"></select>
+      <select id="ampm"><option>AM</option><option>PM</option></select>
+    </div>
+
+    <div style="height:8px"></div>
+    <button class="secondary" id="nowBtn">Use current date & time</button>
+  </div>
+
+  <div class="card">
+    <div class="label">Bake duration</div>
+    <div class="grid2">
+      <div>
+        <div class="small">Hours</div>
+        <input id="hours" type="number" min="0" step="1" value="16">
+      </div>
+      <div>
+        <div class="small">Minutes</div>
+        <input id="mins" type="number" min="0" max="59" step="1" value="0">
+      </div>
+    </div>
+
+    <div class="label">Temperature (optional)</div>
+    <div class="grid2">
+      <input id="temp" type="number" step="1" value="85">
+      <select id="tempUnit"><option value="C">°C</option><option value="F">°F</option></select>
+    </div>
+
+    <div class="label">Quick presets</div>
+    <div class="row">
+      <button class="preset secondary" data-h="16" data-m="0" data-t="85">16 hr @ 85°C</button>
+      <button class="preset secondary" data-h="24" data-m="0" data-t="">24 hr</button>
+    </div>
+  </div>
+
+  <button class="primary" id="calcBtn">Calculate ready time</button>
+
+  <div class="card result" id="resultCard">
+    <div class="ready">Ready at</div>
+    <div class="time" id="resultTime">—</div>
+    <div class="date" id="resultDate">Enter a start time</div>
+    <div class="meta" id="resultMeta"></div>
+    <div class="temp" id="resultTemp"></div>
+  </div>
+
+  <div class="row">
+    <button class="secondary" id="saveBtn">Save calculation</button>
+    <button class="secondary" id="clearBtn">Clear history</button>
+  </div>
+
+  <div class="card">
+    <div class="label">Saved bakes</div>
+    <div id="history"><div class="small">No saved calculations yet.</div></div>
+  </div>
+  <section class="card" aria-labelledby="elapsedHeading">
+    <h2 id="elapsedHeading" style="font-size:22px;margin:0 0 8px">Time to Time</h2>
+    <p class="small">Find how much time has passed. If the end time is earlier, it is counted as the next day. Matching times mean 0 minutes.</p>
+    <form id="elapsedForm">
+      <div class="label">Start time</div>
+      <div class="elapsed-controls">
+        <select id="elapsedStartHour" aria-label="Start hour"></select>
+        <select id="elapsedStartMinute" aria-label="Start minute"></select>
+        <select id="elapsedStartPeriod" aria-label="Start AM or PM"><option>AM</option><option selected>PM</option></select>
+      </div>
+      <div class="label">End time</div>
+      <div class="elapsed-controls">
+        <select id="elapsedEndHour" aria-label="End hour"></select>
+        <select id="elapsedEndMinute" aria-label="End minute"></select>
+        <select id="elapsedEndPeriod" aria-label="End AM or PM"><option>AM</option><option selected>PM</option></select>
+      </div>
+      <button class="primary" type="submit" style="margin-top:16px">Calculate elapsed time</button>
+    </form>
+    <div class="result" role="status" aria-live="polite" aria-atomic="true" style="border-radius:14px;padding:18px 10px;margin-top:16px">
+      <div class="ready">Time passed</div>
+      <div id="elapsedResult" style="font-size:32px;font-weight:800;margin:8px 0"></div>
+      <div class="meta" id="elapsedMeta"></div>
+    </div>
   </section>
-  <footer>Tip: In Safari, tap Share → Add to Home Screen.</footer>
-</main>
+
+</div>
+
 <script>
-  const $=id=>document.getElementById(id);let tempUnit='°C';
-  for(let h=1;h<=12;h++) $('startHour').add(new Option(String(h),String(h)));
-  for(let m=0;m<60;m+=5) $('startMinute').add(new Option(String(m).padStart(2,'0'),String(m)));
-  function setNow(){const n=new Date(),m=Math.round(n.getMinutes()/5)*5; if(m===60)n.setHours(n.getHours()+1,0);else n.setMinutes(m);$('startDate').value=[n.getFullYear(),String(n.getMonth()+1).padStart(2,'0'),String(n.getDate()).padStart(2,'0')].join('-');const h=n.getHours();$('startHour').value=String(h%12||12);$('startMinute').value=String(n.getMinutes());$('meridiem').value=h>=12?'PM':'AM'}
-  setNow();
-  document.querySelectorAll('[data-hours]').forEach(b=>b.onclick=()=>{$('durationHours').value=b.dataset.hours;$('durationMinutes').value=0});
-  document.querySelectorAll('[data-temp-unit]').forEach(b=>b.onclick=()=>{tempUnit=b.dataset.tempUnit;document.querySelectorAll('[data-temp-unit]').forEach(x=>x.style.borderColor=x===b?'var(--accent)':'var(--line)')});document.querySelector('[data-temp-unit="°C"]').click();
-  function calculate(){
-    $('warning').style.display='none';const date=$('startDate').value,hours=Number($('durationHours').value),minutes=Number($('durationMinutes').value),hour12=Number($('startHour').value),minute=Number($('startMinute').value);
-    if(!date||!Number.isFinite(hours)||!Number.isFinite(minutes)||hours<0||minutes<0||minutes>59||(hours===0&&minutes===0)){showError('Enter a valid bake duration.');return}
-    let hour=hour12%12+($('meridiem').value==='PM'?12:0);const [y,mo,d]=date.split('-').map(Number);const start=new Date(y,mo-1,d,hour,minute);const ready=new Date(start.getTime()+(hours*60+minutes)*60000);
-    if(Number.isNaN(ready.getTime())){showError('Check the start date and time.');return}
-    $('readyDay').textContent=ready.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:start.getFullYear()!==ready.getFullYear()?'numeric':undefined});$('readyTime').textContent=ready.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
-    const temp=$('temperature').value.trim();$('readyDetails').textContent=`Started ${start.toLocaleDateString(undefined,{month:'short',day:'numeric'})} at ${start.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})} • ${hours} hr ${minutes} min${temp?' • '+temp+tempUnit:''}`;$('result').classList.add('show');$('result').scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
-  function showError(message){$('warning').textContent=message;$('warning').style.display='block';$('result').classList.remove('show')}
-  $('calculate').onclick=calculate;document.addEventListener('keydown',e=>{if(e.key==='Enter')calculate()});
+function pad(n){return String(n).padStart(2,'0')}
+const hourSel=document.getElementById('hour');
+const minSel=document.getElementById('minute');
+for(let h=1;h<=12;h++){hourSel.insertAdjacentHTML('beforeend',`<option>${h}</option>`)}
+for(let m=0;m<60;m++){minSel.insertAdjacentHTML('beforeend',`<option value="${m}">${pad(m)}</option>`)}
+
+function setNow(){
+  const d=new Date();
+  document.getElementById('startDate').value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  let h=d.getHours(), ap=h>=12?'PM':'AM';
+  h=h%12||12;
+  hourSel.value=h; minSel.value=d.getMinutes(); document.getElementById('ampm').value=ap;
+}
+setNow();
+
+document.getElementById('nowBtn').onclick=setNow;
+
+document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>{
+  document.getElementById('hours').value=b.dataset.h;
+  document.getElementById('mins').value=b.dataset.m;
+  document.getElementById('temp').value=b.dataset.t;
+  document.getElementById('tempUnit').value='C';
+  calculate();
+});
+
+let lastResult=null;
+function getStart(){
+  const date=document.getElementById('startDate').value;
+  if(!date) return null;
+  let h=parseInt(hourSel.value,10), m=parseInt(minSel.value,10);
+  const ap=document.getElementById('ampm').value;
+  if(ap==='AM' && h===12)h=0;
+  if(ap==='PM' && h!==12)h+=12;
+  const [y,mo,da]=date.split('-').map(Number);
+  return new Date(y,mo-1,da,h,m,0,0);
+}
+function fmtTime(d){
+  return d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit',hour12:true});
+}
+function fmtDate(d){
+  return d.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+function calculate(){
+  const start=getStart();
+  if(!start)return;
+  const h=Math.max(0,parseInt(document.getElementById('hours').value||0,10));
+  const m=Math.max(0,parseInt(document.getElementById('mins').value||0,10));
+  const end=new Date(start.getTime()+(h*60+m)*60000);
+  const temp=document.getElementById('temp').value;
+  const unit=document.getElementById('tempUnit').value;
+  document.getElementById('resultTime').textContent=fmtTime(end);
+  document.getElementById('resultDate').textContent=fmtDate(end);
+  document.getElementById('resultMeta').textContent=`Start: ${fmtDate(start)} at ${fmtTime(start)} • Duration: ${h} hr ${m} min`;
+  document.getElementById('resultTemp').textContent=temp?`Bake temperature: ${temp}°${unit}`:'';
+  lastResult={start:start.toISOString(),end:end.toISOString(),h,m,temp,unit};
+}
+document.getElementById('calcBtn').onclick=calculate;
+calculate();
+
+function loadHistory(){
+  const items=JSON.parse(localStorage.getItem('bakeHistory')||'[]');
+  const box=document.getElementById('history');
+  if(!items.length){box.innerHTML='<div class="small">No saved calculations yet.</div>';return;}
+  box.innerHTML=items.map(x=>{
+    const s=new Date(x.start), e=new Date(x.end);
+    const t=x.temp?`<span class="pill">${x.temp}°${x.unit}</span>`:'';
+    return `<div class="history-item">
+      <div><strong>${fmtTime(e)}</strong> — ${fmtDate(e)}</div>
+      <div class="small">Started ${fmtTime(s)} • ${x.h} hr ${x.m} min</div>
+      <div>${t}</div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('saveBtn').onclick=()=>{
+  calculate(); if(!lastResult)return;
+  const items=JSON.parse(localStorage.getItem('bakeHistory')||'[]');
+  items.unshift(lastResult);
+  localStorage.setItem('bakeHistory',JSON.stringify(items.slice(0,25)));
+  loadHistory();
+};
+document.getElementById('clearBtn').onclick=()=>{
+  localStorage.removeItem('bakeHistory'); loadHistory();
+};
+loadHistory();
+</script>
+<script>
+function elapsedMinutes(startHour,startMinute,startPeriod,endHour,endMinute,endPeriod){
+  const start=(startHour%12+(startPeriod==='PM'?12:0))*60+startMinute;
+  const end=(endHour%12+(endPeriod==='PM'?12:0))*60+endMinute;
+  return (end-start+1440)%1440;
+}
+function elapsedText(total){
+  const hours=Math.floor(total/60), minutes=total%60;
+  const parts=[];
+  if(hours)parts.push(hours+' '+(hours===1?'hour':'hours'));
+  if(minutes || !hours)parts.push(minutes+' '+(minutes===1?'minute':'minutes'));
+  return parts.join(' ');
+}
+function updateElapsed(){
+  const read=(side)=>{
+    const h=Number(document.getElementById('elapsed'+side+'Hour').value);
+    const m=Number(document.getElementById('elapsed'+side+'Minute').value);
+    const p=document.getElementById('elapsed'+side+'Period').value;
+    return {h,m,p,clock:(h%12+(p==='PM'?12:0))*60+m,label:h+':'+pad(m)+' '+p};
+  };
+  const s=read('Start'),e=read('End');
+  document.getElementById('elapsedResult').textContent=elapsedText(elapsedMinutes(s.h,s.m,s.p,e.h,e.m,e.p));
+  document.getElementById('elapsedMeta').textContent=s.label+' to '+e.label+(e.clock<s.clock?' (next day)':' (same day)');
+}
+for(const side of ['Start','End']){
+  const hour=document.getElementById('elapsed'+side+'Hour');
+  const minute=document.getElementById('elapsed'+side+'Minute');
+  for(let h=1;h<=12;h++)hour.add(new Option(h,h));
+  for(let m=0;m<60;m++)minute.add(new Option(pad(m),m));
+  hour.value=side==='Start'?'6':'8';
+}
+document.getElementById('elapsedForm').addEventListener('submit',event=>{event.preventDefault();updateElapsed();});
+document.getElementById('elapsedForm').addEventListener('change',updateElapsed);
+updateElapsed();
 </script>
 </body>
 </html>
