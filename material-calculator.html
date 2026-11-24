@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Material Usage per Unit</title>
+<style>
+:root{font:16px system-ui,sans-serif;color:#172c30;background:#edf2f0;line-height:1.5}*{box-sizing:border-box}body{margin:0}header{background:#123437;color:#fff;padding:38px max(22px,calc((100vw - 980px)/2))}h1{font-size:clamp(2rem,5vw,3rem);line-height:1.1;margin:0 0 10px}header p{margin:0;color:#cee6df}main{max-width:1024px;margin:auto;padding:24px 22px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px;align-items:start}.panel{background:white;border:1px solid #d8e4df;border-radius:16px;padding:22px}h2{font-size:1.18rem;margin:0 0 12px}label{display:block;font-weight:650;margin-bottom:10px}input,select,button{font:inherit}input,select{display:block;width:100%;border:1px solid #a5b9b3;border-radius:8px;padding:8px;margin-top:4px;color:inherit;background:#fff;min-height:43px}input:focus,select:focus,button:focus-visible,a:focus-visible{outline:3px solid #168479;outline-offset:2px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px}.row label{margin:0}button{cursor:pointer;border:1px solid #9ab7ad;color:#154941;background:#edf7f2;border-radius:8px;padding:8px 12px;min-height:43px}button.primary{background:#176456;color:white;border-color:#176456}button:disabled{opacity:.5;cursor:default}fieldset{padding:12px 0 0;margin:12px 0;border:0;border-top:1px solid #dee8e3}legend{padding-right:8px;font-weight:700}.hint,small{font-size:.88rem;color:#455c58}.result{background:#e0f3ea;border-radius:12px;padding:15px;margin:12px 0;overflow-wrap:anywhere}.result output{display:block;font-weight:750;font-size:1.6rem;font-variant-numeric:tabular-nums}.metric{margin:8px 0;overflow-wrap:anywhere}#issue{color:#8e3526}details{margin-top:18px;border-top:1px solid #dee8e3;padding-top:12px}summary{cursor:pointer;font-weight:650}a{color:#115f55}[hidden]{display:none!important}@media(max-width:700px){main{grid-template-columns:1fr}.panel{padding:17px}}@media(max-width:360px){.row{grid-template-columns:1fr 1fr}.row button{grid-column:span 2}}
+</style>
+</head>
+<body>
+<header><h1>Material Usage per Unit</h1><p>Measure one finished unit and convert its material usage to the ERP unit.</p></header>
+<main>
+<section class="panel" aria-labelledby="lengthTitle" style="grid-column:1 / -1">
+<h2 id="lengthTitle">Yards and inches converter</h2>
+<p class="hint">1 yard = 36 inches.</p>
+<label>Amount<input id="lengthAmount" type="number" min="0" step="any" value="1"></label>
+<div class="grid">
+<label>From<select id="lengthFrom"></select></label>
+<label>To<select id="lengthTo"></select></label>
+</div>
+<div class="result"><output id="lengthResult" aria-live="polite">36 in</output></div>
+</section>
+<section class="panel" aria-labelledby="inputTitle">
+<h2 id="inputTitle">Material and measurements</h2>
+<label>Material<select id="material">
+<option value="resin">Araldite GY 6010 N US resin</option>
+<option value="hardener">Hardener</option>
+<option value="wire">Torpedo #24 wire</option>
+<option value="mica">Mica powder</option>
+<option value="tape">Tape</option>
+<option value="shrink">Shrink tubing</option>
+<option value="custom">Custom material</option>
+</select></label>
+<p class="hint" id="materialNote"></p>
+<fieldset id="spoolBox" hidden><legend>How many feet are on the spool?</legend>
+<div class="grid">
+<label>Wire weight only (lb)<input id="wireWeight" type="number" min="0" step="any" placeholder="9.5085 if confirmed net"></label>
+<label>Measured sample length (ft)<input id="sampleFeet" type="number" min="0" step="any" placeholder="Example 10"></label>
+<label>Sample wire weight (g)<input id="sampleGrams" type="number" min="0" step="any"></label>
+</div>
+<p class="hint">Use a sample of the exact wire. If weighing the full spool, subtract the empty spool weight first.</p>
+<p class="metric">Estimated total length <output id="spoolFeet" aria-live="polite">—</output></p>
+<button type="button" id="useSpool" disabled>Use estimated feet as package amount</button>
+</fieldset>
+<fieldset><legend>Material measured</legend>
+<label>Measurement basis<select id="basis"><option value="unit">Per finished unit</option><option value="lot">Per lot</option></select></label>
+<div id="lotMeasurement" hidden>
+<label>Measured amount for the whole lot<input id="lotAmount" type="number" min="0" step="any"></label>
+</div>
+<div id="unitHint">
+<p class="hint">Use one row for the total, or add a row for each different point, layer, or cut. Repeat count applies within the same finished unit.</p>
+</div>
+<label>Measurement unit<select id="inputUnit"></select></label>
+<div id="unitMeasurement"><div id="rows"></div>
+<button type="button" id="add">Add measurement</button></div>
+</fieldset>
+<fieldset><legend>Lot quantity</legend>
+<label>Finished units in the lot<input id="lotQty" type="number" min="1" step="1" inputmode="numeric" placeholder="Optional"></label>
+
+</fieldset>
+<fieldset><legend>ERP output and package</legend>
+<div class="grid">
+<label>ERP unit<select id="erpUnit"></select></label>
+<label>Package label<select id="packageName"><option>drum</option><option>spool</option><option>bag</option><option>roll</option><option>box</option><option>case</option><option>pail</option><option>package</option></select></label>
+<label>Net amount in one package<input id="packageQty" type="number" min="0" step="any"></label>
+<label>Package unit<select id="packageUnit"></select></label>
+</div>
+<p class="hint">Use the net quantity on your current package. Leave it blank to calculate usage without a package fraction.</p>
+</fieldset>
+<fieldset id="factorBox" hidden><legend id="factorTitle"></legend>
+<div class="grid"><label id="factorLabel">Value<input id="factor" type="number" step="any" min="0"></label><label>Factor unit<select id="factorUnit"></select></label></div>
+<p id="factorNote" class="hint"></p>
+</fieldset>
+</section>
+<section class="panel" aria-labelledby="resultsTitle">
+<h2 id="resultsTitle">Usage for one finished unit</h2>
+<div class="metric">Amount per unit <strong id="total">—</strong></div>
+<div class="result"><small>ERP quantity per unit</small><output id="result" aria-live="polite">—</output></div>
+<div class="metric">Package fraction <strong id="fraction">—</strong></div>
+<p id="issue" class="hint" role="status">Enter a measurement to calculate usage.</p>
+<button class="primary" type="button" id="copy" disabled>Copy ERP quantity</button>
+<span class="hint" id="copied" role="status"></span>
+<fieldset><legend id="lotTitle">Estimated usage for the lot</legend>
+<div class="metric">Amount <strong id="lotMeasured">—</strong></div>
+<div class="metric">ERP quantity <output id="lotErp" aria-live="polite">—</output></div>
+<div class="metric">Package equivalent <strong id="lotPackage">—</strong></div>
+<p class="hint" id="lotIssue" role="status"></p>
+</fieldset>
+<details><summary>Material references</summary>
+<p class="hint">The photographed resin label lists 529 lb / 240 kg net. A Huntsman GY 6010 data sheet lists a typical density range of 1.15–1.18 g/mL at 25 °C. Confirm the current document for the exact grade before entering a density for ERP use. <a href="https://ecommapi.krayden.com/Content/pdf/datasheet/hunts_araldite_gy_6010_tds.pdf">Huntsman data sheet</a> · <a href="https://compositesone.com/en-us/product/araldite-gy-6010-n-pf563291">Exact grade listing</a></p>
+<p class="hint">The hardener label lists 55 gal. Match the supplier data sheet to the exact hardener for density.</p>
+<p class="hint">The Torpedo #24 spool label lists 9.5085 lb. Confirm net wire weight for spool fractions. Use the supplier’s mass per length or weigh a known length of the exact wire. <a href="https://www.summitplating.com/torpedo-wire-acquired-by-summit/">Torpedo supplier background</a></p>
+</details>
+</section>
+<section class="panel" aria-labelledby="weightTitle">
+<h2 id="weightTitle">Weight converter</h2>
+<p class="hint">1 lb = 453.59237 g · 1 kg = 1,000 g</p>
+<div class="grid">
+<label>Amount<input id="weightAmount" type="number" min="0" step="any" value="1"></label>
+<label>From<select id="weightUnit"><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option><option value="g">Grams (g)</option></select></label>
+</div>
+<div class="result"><small>Grams</small><output id="weightGrams">—</output></div>
+<div class="metric" aria-live="polite"><span id="weightPounds"></span> · <span id="weightKilos"></span></div>
+</section>
+
+</main>
+<script>
+"use strict";
+const units = {
+  g: ["mass", 1, "g"], kg: ["mass", 1000, "kg"], lb: ["mass", 453.59237, "lb"], oz: ["mass", 28.349523125, "oz"],
+  mL: ["volume", 1, "mL"], L: ["volume", 1000, "L"], gal: ["volume", 3785.411784, "US gal"], qt: ["volume", 946.352946, "US qt"], pt: ["volume", 473.176473, "US pt"], flOz: ["volume", 29.5735295625, "US fl oz"],
+  mm: ["length", 1, "mm"], in: ["length", 25.4, "in"], ft: ["length", 304.8, "ft"], yd: ["length", 914.4, "yd"], cm: ["length", 10, "cm"], m: ["length", 1000, "m"],
+  ea: ["count", 1, "ea"], doz: ["count", 12, "doz"]
+};
+const presets = {
+  resin: ["g", "lb", "drum", 529, "lb", ["mass","volume"], "The photographed drum shows 529 lb / 240 kg net. Enter the resin used on one unit."],
+  hardener: ["mL", "gal", "drum", 55, "gal", ["mass","volume"], "The photographed drum shows 55 gal. Record hardener separately from resin."],
+  wire: ["in", "ft", "spool", "", "lb", ["length","mass"], "The photographed spool shows 9.5085 lb. Confirm net wire weight before entering it for a spool fraction."],
+  mica: ["g", "lb", "bag", 50, "lb", ["mass"], "50 lb per bag is the worksheet example. Enter the amount on your actual package."],
+  tape: ["yd", "yd", "roll", "", "yd", ["length"], "Enter the tape used in yards. If you measure in inches, select in and leave the ERP unit as yd."],
+  shrink: ["in", "ft", "roll", "", "ft", ["length"], "Measure the cuts used on one finished unit."],
+  custom: ["g", "lb", "package", "", "lb", ["mass","volume","length","count"], ""]
+};
+const factors = {
+  density: {title:"Density", units:{"g/mL":1,"kg/L":1,"lb/US gal":453.59237/3785.411784}, note:"Enter the density from the exact component’s data sheet."},
+  linear: {title:"Mass per length", units:{"g/ft":1/304.8,"g/m":1/1000,"lb/1000 ft":453.59237/304800}, note:"Use the exact wire specification or divide a sample’s weight by its measured length."}
+};
+const byId = id => document.getElementById(id);
+const options = (element, entries, selected) => {
+  element.replaceChildren(...entries.map(([value, label]) => new Option(label, value)));
+  if (entries.some(([value]) => value === selected)) element.value = selected;
+};
+function addRow() {
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = '<label>Amount<input class="amount" type="number" min="0" step="any" placeholder="0"></label><label>Repeat count<input class="count" type="number" min="1" step="1" value="1"></label><button type="button" aria-label="Remove measurement">Remove</button>';
+  row.querySelector("button").onclick = () => {row.remove(); updateRows(); calculate();};
+  byId("rows").append(row);
+  updateRows();
+  return row;
+}
+function updateRows() {
+  const rows = [...byId("rows").children];
+  rows.forEach((row,index) => {
+    row.querySelector(".amount").setAttribute("aria-label", "Amount for measurement " + (index + 1));
+    row.querySelector(".count").setAttribute("aria-label", "Repeat count for measurement " + (index + 1));
+    const button = row.querySelector("button");
+    button.disabled = rows.length === 1;
+    button.setAttribute("aria-label", "Remove measurement " + (index + 1));
+  });
+}
+function applyPreset() {
+  const [input, erp, pack, quantity, packUnit, types, note] = presets[byId("material").value];
+  const choices = Object.entries(units).filter(([,unit]) => types.includes(unit[0])).map(([key,unit]) => [key,unit[2]]);
+  options(byId("inputUnit"), choices, input);
+  options(byId("erpUnit"), [...choices, ["package","Fraction of one package"]], erp);
+  options(byId("packageUnit"), choices, packUnit);
+  byId("packageName").value = pack;
+  byId("packageQty").value = quantity;
+  byId("materialNote").textContent = note;
+  byId("spoolBox").hidden = byId("material").value !== "wire";
+  for (const key of Object.keys(factorValues)) delete factorValues[key];
+  activeFactor = "";
+  byId("factor").value = "";
+  byId("lotAmount").value = "";
+  byId("rows").replaceChildren();
+  addRow();
+  calculate();
+}
+function bridge(from, to) {
+  const a = units[from][0], b = units[to][0];
+  const pair = [a,b].sort().join("/");
+  if (a === b) return "";
+  if (pair === "mass/volume") return "density";
+  if (pair === "length/mass") return "linear";
+  return "unsupported";
+}
+function convert(amount, from, to, factor) {
+  const [a, scale] = units[from], [, targetScale] = units[to];
+  const kind = bridge(from, to);
+  const base = amount * scale;
+  if (!kind) return base / targetScale;
+  if (kind === "unsupported" || !Number.isFinite(factor) || factor <= 0) return NaN;
+  return (a === "mass" ? base / factor : base * factor) / targetScale;
+}
+let activeFactor = "";
+const factorValues = {};
+let copyValue = "";
+function showFactor(kind) {
+  if (activeFactor) factorValues[activeFactor] = [byId("factor").value, byId("factorUnit").value];
+  if (activeFactor !== kind && kind) {
+    const [value, unit] = factorValues[kind] || ["",""];
+    const definition = factors[kind];
+    byId("factorTitle").textContent = definition.title;
+    byId("factorNote").textContent = definition.note;
+    byId("factor").value = value;
+    options(byId("factorUnit"), Object.keys(definition.units).map(key => [key,key]), unit);
+  }
+  byId("factorBox").hidden = !kind;
+  activeFactor = kind;
+}
+const format = value => value !== 0 && (Math.abs(value) < 0.000001 || Math.abs(value) >= 1e12)
+  ? value.toExponential(7)
+  : new Intl.NumberFormat("en-US",{maximumSignificantDigits:9,useGrouping:false}).format(value);
+function estimateSpoolFeet() {
+  const [weight, feet, grams] = ["wireWeight","sampleFeet","sampleGrams"].map(id => byId(id).valueAsNumber);
+  const estimate = weight * units.lb[1] / grams * feet;
+  return [weight, feet, grams, estimate].every(value => Number.isFinite(value) && value > 0) ? estimate : NaN;
+}
+function formatLot(perUnit, lotQty, label, ready) {
+  const quantity = perUnit * lotQty;
+  return ready && Number.isFinite(quantity) ? format(quantity) + " " + label : "—";
+}
+function calculateLength() {
+  const amount = byId("lengthAmount");
+  const to = byId("lengthTo").value;
+  const result = convert(amount.valueAsNumber, byId("lengthFrom").value, to);
+  byId("lengthResult").textContent = formatLot(result, 1, units[to][2], amount.validity.valid);
+}
+function calculateWeight() {
+  const amount = byId("weightAmount");
+  const from = byId("weightUnit").value;
+  for (const [to, id] of [["g", "weightGrams"], ["lb", "weightPounds"], ["kg", "weightKilos"]]) {
+    const result = convert(amount.valueAsNumber, from, to);
+    byId(id).textContent = formatLot(result, 1, to, amount.validity.valid);
+  }
+}
+function calculate() {
+  const perLot = byId("basis").value === "lot";
+  const lotInput = byId("lotQty");
+  const lotQty = lotInput.valueAsNumber;
+  const validLot = Number.isSafeInteger(lotQty) && lotQty > 0;
+  byId("unitHint").hidden = perLot;
+  byId("unitMeasurement").hidden = perLot;
+  byId("lotMeasurement").hidden = !perLot;
+  lotInput.placeholder = perLot ? "Required for per-unit usage" : "Optional";
+  byId("lotTitle").textContent = perLot ? "Measured usage for the lot" : "Estimated usage for the lot";
+  const spoolFeet = estimateSpoolFeet();
+  byId("spoolFeet").textContent = Number.isFinite(spoolFeet) ? format(spoolFeet) + " ft" : "—";
+  byId("useSpool").disabled = !Number.isFinite(spoolFeet);
+  const input = byId("inputUnit").value;
+  const erp = byId("erpUnit").value;
+  const pack = byId("packageUnit").value;
+  const quantity = byId("packageQty").valueAsNumber;
+  const packageReady = Number.isFinite(quantity) && quantity > 0;
+  const erpBridge = bridge(input, erp === "package" ? pack : erp);
+  const packBridge = packageReady ? bridge(input, pack) : "";
+  // Custom volume and length have no direct conversion.
+  const kind = [erpBridge, packBridge].find(value => factors[value]) || "";
+  showFactor(kind);
+  const factor = kind ? byId("factor").valueAsNumber * factors[kind].units[byId("factorUnit").value] : NaN;
+  let total = 0, measured = false, invalid = false;
+  for (const row of perLot ? [] : byId("rows").children) {
+    const amount = row.querySelector(".amount"), count = row.querySelector(".count");
+    if (amount.validity.badInput) {invalid = true; break;}
+    if (!amount.value) continue;
+    if (!amount.validity.valid || !count.validity.valid || !count.value) {invalid = true; break;}
+    total += amount.valueAsNumber * count.valueAsNumber;
+    measured = true;
+  }
+  if (perLot) {
+    const amount = byId("lotAmount");
+    total = amount.valueAsNumber;
+    measured = amount.value !== "";
+    invalid = !amount.validity.valid;
+  }
+  invalid ||= measured && !Number.isFinite(total);
+  const fraction = packageReady ? convert(total, input, pack, packBridge === kind ? factor : NaN) / quantity : NaN;
+  const result = erp === "package" ? fraction : convert(total, input, erp, erpBridge === kind ? factor : NaN);
+  const packageName = byId("packageName").value;
+  const entered = measured && !invalid;
+  const ready = entered && (!perLot || validLot);
+  const unitsCovered = perLot ? lotQty : 1;
+  byId("total").textContent = ready ? format(total / unitsCovered) + " " + units[input][2] : "—";
+  byId("fraction").textContent = ready && Number.isFinite(fraction) ? format(fraction / unitsCovered) + " " + packageName + " per unit" : "—";
+  copyValue = ready && Number.isFinite(result) ? format(result / unitsCovered) + " " + (erp === "package" ? packageName : units[erp][2]) : "";
+  byId("result").textContent = copyValue || "—";
+  byId("copy").disabled = !copyValue;
+  byId("copied").textContent = "";
+  const lotMultiplier = perLot ? 1 : lotQty;
+  const lotReady = entered && (perLot || validLot);
+  const erpLabel = erp === "package" ? packageName : units[erp][2];
+  byId("lotMeasured").textContent = formatLot(total, lotMultiplier, units[input][2], lotReady);
+  byId("lotErp").textContent = formatLot(result, lotMultiplier, erpLabel, lotReady);
+  byId("lotPackage").textContent = formatLot(fraction, lotMultiplier, packageName, lotReady);
+  byId("lotIssue").textContent = (perLot || lotInput.value || lotInput.validity.badInput) && !validLot
+    ? "Enter a positive whole number of finished units."
+    : "";
+  const messages = [];
+  if (invalid) messages.push(perLot ? "Enter a nonnegative lot amount." : "Enter nonnegative amounts and positive whole repeat counts.");
+  else if (!measured) messages.push("Enter a measurement to calculate usage.");
+  else {
+    if (erp === "package" && !packageReady) messages.push("Enter a positive net amount in one package.");
+    if ([erpBridge, packBridge].includes("unsupported")) messages.push("The selected units cannot be converted directly.");
+    if (kind && (!Number.isFinite(factor) || factor <= 0)) messages.push("Enter " + factors[kind].title.toLowerCase() + " to complete the conversion.");
+    if (erpBridge && packBridge && erpBridge !== packBridge && factors[erpBridge] && factors[packBridge]) messages.push("Match the package unit to the ERP or measurement dimension to calculate both outputs together.");
+    if (ready && !messages.length && !copyValue) messages.push("The calculated value is outside the supported range.");
+  }
+  byId("issue").textContent = messages.join(" ");
+}
+byId("material").addEventListener("change", applyPreset);
+document.querySelector("main").addEventListener("input", event => {
+  if (event.target.id.startsWith("weight")) calculateWeight();
+  else if (event.target.id.startsWith("length")) calculateLength();
+  else if (event.target.id !== "material") calculate();
+});
+byId("add").onclick = () => addRow().querySelector("input").focus();
+byId("useSpool").onclick = () => {
+  byId("packageQty").value = estimateSpoolFeet();
+  byId("packageUnit").value = "ft";
+  calculate();
+};
+byId("copy").onclick = async () => {
+  try {await navigator.clipboard.writeText(copyValue); byId("copied").textContent = "Copied.";}
+  catch {byId("copied").textContent = "Select the result text to copy it.";}
+};
+applyPreset();
+calculateWeight();
+const lengthOptions = Object.entries(units)
+  .filter(([, unit]) => unit[0] === "length")
+  .map(([key, unit]) => [key, unit[2]]);
+options(byId("lengthFrom"), lengthOptions, "yd");
+options(byId("lengthTo"), lengthOptions, "in");
+calculateLength();
+</script>
+</body>
+</html>
